@@ -36,20 +36,6 @@ function buildWorldMap(): void {
         83, 145, 76, 142, 67, 7, 154, 66, 164, 67, 172, 73, 175, 81, 169, 84, 162, 80, 157, 75, 5, 185, 48, 190,
         47, 193, 53, 190, 58, 186, 55, 9, 158, 121, 170, 117, 182, 122, 190, 132, 187, 144, 178, 151, 166, 151, 157, 143,
         154, 132, 5, 128, 115, 131, 121, 130, 133, 127, 137, 125, 127, 5, 85, 23, 89, 21, 92, 24, 90, 27, 86, 27,
-    ] = [
-        14, 12, 24, 20, 13, 34, 9, 47, 13, 56, 22, 53, 31, 60, 39, 51, 48, 45, 57, 39, 65, 31, 62, 27, 53, 19, 48, 14, 39,
-        7, 39, 63, 45, 67, 49, 73, 54, 77, 51, 81, 46, 77, 43, 71,
-        11, 47, 79, 58, 82, 64, 93, 62, 108, 57, 124, 53, 143, 47, 157, 42, 146, 39, 128, 37, 111, 39, 94,
-        6, 48, 5, 61, 2, 70, 8, 66, 20, 56, 24, 49, 17,
-        7, 91, 27, 99, 21, 109, 22, 116, 28, 112, 36, 103, 39, 96, 35,
-        9, 96, 41, 112, 39, 120, 48, 118, 65, 111, 83, 103, 98, 96, 85, 91, 68, 90, 52,
-        12, 112, 19, 132, 12, 153, 15, 173, 24, 188, 34, 184, 47, 169, 51, 158, 47, 146, 55, 133, 48, 121, 43, 115, 34,
-        5, 132, 49, 143, 52, 146, 65, 140, 76, 134, 66,
-        5, 151, 52, 163, 55, 170, 64, 166, 73, 158, 67,
-        4, 180, 45, 184, 49, 182, 58, 178, 54,
-        7, 158, 111, 174, 107, 185, 116, 181, 130, 169, 137, 157, 129, 153, 119,
-        4, 119, 91, 122, 96, 120, 105, 117, 100,
-        9, 20, 180, 45, 176, 72, 179, 99, 177, 128, 180, 155, 177, 181, 181, 190, 190, 10, 190
     ]
     const mapImage = image.create(MAP_WIDTH, MAP_HEIGHT)
     mapImage.fill(1)
@@ -158,11 +144,6 @@ function buildWorldMap(): void {
     const mapData = control.createBuffer(4 + MAP_WIDTH * MAP_HEIGHT)
     mapData.setNumber(NumberFormat.UInt16LE, 0, MAP_WIDTH)
     mapData.setNumber(NumberFormat.UInt16LE, 2, MAP_HEIGHT)
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            mapData.setNumber(NumberFormat.UInt8LE, 4 + y * MAP_WIDTH + x, mapImage.getPixel(x, y))
-        }
-    }
     const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile, forestTile, waveTile], TileScale.Sixteen)
     tiles.setCurrentTilemap(world)
     for (let x = 0; x < MAP_WIDTH; x++) {
