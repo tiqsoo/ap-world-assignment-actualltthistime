@@ -22,8 +22,6 @@ function pointInPolygon(x: number, y: number, points: number[], start: number, p
 }
 
 function buildWorldMap(): void {
-    // Each polygon is stored in one flat array: point count, then x/y pairs.
-    // This avoids nested arrays, which caused the MakeCode t.findIdx runtime error.
     const continentPoints: number[] = [
         14, 12, 24, 20, 13, 34, 9, 47, 13, 56, 22, 53, 31, 60, 39, 51, 48, 45, 57, 39, 65, 31, 62, 27, 53, 19, 48, 14, 39,
         7, 39, 63, 45, 67, 49, 73, 54, 77, 51, 81, 46, 77, 43, 71,
@@ -39,21 +37,16 @@ function buildWorldMap(): void {
         4, 119, 91, 122, 96, 120, 105, 117, 100,
         9, 20, 180, 45, 176, 72, 179, 99, 177, 128, 180, 155, 177, 181, 181, 190, 190, 10, 190
     ]
-
     const mapImage = image.create(MAP_WIDTH, MAP_HEIGHT)
-    // Tile index 1 is water. Index 0 is reserved for the transparent tile.
     mapImage.fill(1)
-
     let offset = 0
     while (offset < continentPoints.length) {
         const pointCount = continentPoints[offset]
         offset += 1
-
         let minX = MAP_WIDTH - 1
         let maxX = 0
         let minY = MAP_HEIGHT - 1
         let maxY = 0
-
         for (let k = 0; k < pointCount; k++) {
             const px = continentPoints[offset + k * 2]
             const py = continentPoints[offset + k * 2 + 1]
@@ -62,7 +55,6 @@ function buildWorldMap(): void {
             minY = Math.min(minY, py)
             maxY = Math.max(maxY, py)
         }
-
         for (let x = minX; x <= maxX; x++) {
             for (let y = minY; y <= maxY; y++) {
                 if (pointInPolygon(x, y, continentPoints, offset, pointCount)) {
@@ -72,33 +64,22 @@ function buildWorldMap(): void {
         }
         offset += pointCount * 2
     }
-
-    // Add a narrow sandy shoreline around the green land.
     for (let x = 1; x < MAP_WIDTH - 1; x++) {
         for (let y = 1; y < MAP_HEIGHT - 1; y++) {
             if (mapImage.getPixel(x, y) == 2) {
-                if (
-                    mapImage.getPixel(x - 1, y) == 1 ||
-                    mapImage.getPixel(x + 1, y) == 1 ||
-                    mapImage.getPixel(x, y - 1) == 1 ||
-                    mapImage.getPixel(x, y + 1) == 1
-                ) {
+                if (mapImage.getPixel(x - 1, y) == 1 || mapImage.getPixel(x + 1, y) == 1 || mapImage.getPixel(x, y - 1) == 1 || mapImage.getPixel(x, y + 1) == 1) {
                     mapImage.setPixel(x, y, 3)
                 }
             }
         }
     }
-
-    // Clear the starting harbor beside the British coast.
     for (let x = 91; x <= 95; x++) {
         for (let y = 32; y <= 38; y++) {
             mapImage.setPixel(x, y, 1)
         }
     }
-
     const transparentTile = image.create(16, 16)
     transparentTile.fill(0)
-
     const waterTile = image.create(16, 16)
     waterTile.fill(8)
     for (let y = 3; y < 16; y += 5) {
@@ -107,7 +88,6 @@ function buildWorldMap(): void {
             waterTile.setPixel(x + 1, y, 9)
         }
     }
-
     const landTile = image.create(16, 16)
     landTile.fill(7)
     landTile.setPixel(2, 3, 6)
@@ -115,33 +95,26 @@ function buildWorldMap(): void {
     landTile.setPixel(10, 11, 5)
     landTile.setPixel(11, 11, 5)
     landTile.setPixel(6, 7, 6)
-
     const coastTile = image.create(16, 16)
     coastTile.fill(13)
     coastTile.setPixel(3, 4, 5)
     coastTile.setPixel(12, 10, 5)
-
     const mapData = control.createBuffer(4 + MAP_WIDTH * MAP_HEIGHT)
     mapData.setNumber(NumberFormat.UInt16LE, 0, MAP_WIDTH)
     mapData.setNumber(NumberFormat.UInt16LE, 2, MAP_HEIGHT)
-
-    // The first tileset entry must be transparent; water and land follow it.
-    const world = tiles.createTilemap(
-        mapData,
-        mapImage,
-        [transparentTile, waterTile, landTile, coastTile],
-        TileScale.Sixteen
-    )
+    // Populate the tile IDs in the tilemap's data buffer. Leaving these bytes
+    // at zero creates an entirely transparent/empty map.
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            mapData.setNumber(NumberFormat.UInt8LE, 4 + y * MAP_WIDTH + x, mapImage.getPixel(x, y))
+        }
+    }
+    const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile], TileScale.Sixteen)
     tiles.setCurrentTilemap(world)
-
     for (let x = 0; x < MAP_WIDTH; x++) {
         for (let y = 0; y < MAP_HEIGHT; y++) {
             const tileIndex = mapImage.getPixel(x, y)
-            if (
-                tileIndex == 2 || tileIndex == 3 ||
-                x == 0 || y == 0 ||
-                x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1
-            ) {
+            if (tileIndex == 2 || tileIndex == 3 || x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1) {
                 tiles.setWallAt(tiles.getTileLocation(x, y), true)
             }
         }
@@ -243,13 +216,13 @@ homePort.z = 2
 cargo = sprites.create(img`
 . . . . 6 6 6 6 . . . . . . . .
 . . . 6 a a a a 6 . . . . . . .
-. . 6 a a 6 6 a a 6 . . . . . .
-. 6 a a 6 6 6 6 a a 6 . . . . .
-. 6 a a a a a a a a 6 . . . . .
-. 6 a a 6 6 6 6 a a 6 . . . . .
-. 6 a a 6 6 6 6 a a 6 . . . . .
-. . 6 a a a a a a 6 . . . . . .
-. . . 6 a a a a 6 . . . . . . .
+. . 6 a a 6 6 a a 6 . . . . . . .
+. 6 a a 6 6 6 6 a a 6 . . . . . .
+. 6 a a a a a a a a 6 . . . . . .
+. 6 a a 6 6 6 6 a a 6 . . . . . .
+. 6 a a 6 6 6 6 a a 6 . . . . . .
+. . 6 a a a a a a 6 . . . . . . .
+. . . 6 a a a a 6 . . . . . . . .
 . . . . 6 6 6 6 . . . . . . . .
 . . . . . . . . . . . . . . . .
 . . . . . . . . . . . . . . . .
@@ -270,12 +243,12 @@ let fortOne = sprites.create(img`
 . . . . 9 9 9 9 9 9 9 9 . . . .
 . . . . 9 9 9 9 9 9 9 9 . . . .
 . . . . 9 9 9 9 9 9 9 9 . . . .
-. . . 9 9 9 9 9 9 9 9 9 . . . .
+. . . 9 9 9 9 9 9 9 9 9 . . .
 . . 9 9 9 9 9 9 9 9 9 9 9 . . .
 . . 9 9 9 9 9 9 9 9 9 9 9 . . .
-. . . . . . . . . . . . . . . .
-. . . . . . . . . . . . . . . .
-. . . . . . . . . . . . . . . .
+. . . . . . . . . . . . . . .
+. . . . . . . . . . . . . . .
+. . . . . . . . . . . . . . .
 `, SpriteKind.FortMarker)
 tiles.placeOnTile(fortOne, tiles.getTileLocation(FORT_ONE_COL, FORT_ONE_ROW))
 let fortTwo = sprites.create(img`
@@ -289,12 +262,12 @@ let fortTwo = sprites.create(img`
 . . . . 9 9 9 9 9 9 9 9 . . . .
 . . . . 9 9 9 9 9 9 9 9 . . . .
 . . . . 9 9 9 9 9 9 9 9 . . . .
-. . . 9 9 9 9 9 9 9 9 9 . . . .
+. . . 9 9 9 9 9 9 9 9 9 . . .
 . . 9 9 9 9 9 9 9 9 9 9 9 . . .
 . . 9 9 9 9 9 9 9 9 9 9 9 . . .
-. . . . . . . . . . . . . . . .
-. . . . . . . . . . . . . . . .
-. . . . . . . . . . . . . . . .
+. . . . . . . . . . . . . . .
+. . . . . . . . . . . . . . .
+. . . . . . . . . . . . . . .
 `, SpriteKind.FortMarker)
 tiles.placeOnTile(fortTwo, tiles.getTileLocation(FORT_TWO_COL, FORT_TWO_ROW))
 colony = sprites.create(img`
@@ -365,13 +338,13 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate)
             cargo = sprites.create(img`
 . . . . 6 6 6 6 . . . . . . . .
 . . . 6 a a a a 6 . . . . . . .
-. . 6 a a 6 6 a a 6 . . . . . .
-. 6 a a 6 6 6 6 a a 6 . . . . .
-. 6 a a a a a a a a 6 . . . . .
-. 6 a a 6 6 6 6 a a 6 . . . . .
-. 6 a a 6 6 6 6 a a 6 . . . . .
-. . 6 a a a a a a 6 . . . . . .
-. . . 6 a a a a 6 . . . . . . .
+. . 6 a a 6 6 a a 6 . . . . . . .
+. 6 a a 6 6 6 6 a a 6 . . . . . .
+. 6 a a a a a a a a 6 . . . . . .
+. 6 a a 6 6 6 6 a a 6 . . . . . .
+. 6 a a 6 6 6 6 a a 6 . . . . . .
+. . 6 a a a a a a 6 . . . . . . .
+. . . 6 a a a a 6 . . . . . . . .
 . . . . 6 6 6 6 . . . . . . . .
 . . . . . . . . . . . . . . . .
 . . . . . . . . . . . . . . . .
