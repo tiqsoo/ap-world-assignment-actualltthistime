@@ -102,8 +102,6 @@ function buildWorldMap(): void {
     const mapData = control.createBuffer(4 + MAP_WIDTH * MAP_HEIGHT)
     mapData.setNumber(NumberFormat.UInt16LE, 0, MAP_WIDTH)
     mapData.setNumber(NumberFormat.UInt16LE, 2, MAP_HEIGHT)
-    // Populate the tile IDs in the tilemap's data buffer. Leaving these bytes
-    // at zero creates an entirely transparent/empty map.
     const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile], TileScale.Sixteen)
     tiles.setCurrentTilemap(world)
     for (let x = 0; x < MAP_WIDTH; x++) {
