@@ -506,6 +506,12 @@ function setSailorTerrainMode(onFoot: boolean): void {
             }
         }
     }
+    if (onFoot) {
+        // Make the trader and settlement building physically solid for the sailor.
+        // Keep the surrounding grass walkable so both remain approachable.
+        tiles.setWallAt(tiles.getTileLocation(COLONY_NPC_COL, COLONY_NPC_ROW), true)
+        tiles.setWallAt(tiles.getTileLocation(COLONY_COL, COLONY_ROW), true)
+    }
 }
 
 // The pirate hunts in open water but turns away from any coastline.
