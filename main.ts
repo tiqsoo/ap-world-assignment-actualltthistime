@@ -21,6 +21,129 @@ function pointInPolygon(x: number, y: number, points: number[], start: number, p
     return inside
 }
 
+
+function createShipImage(pirate: boolean): Image {
+    const ship = image.create(24, 24)
+    const sailColor = pirate ? 14 : 1
+    const trimColor = pirate ? 2 : 4
+    for (let y = 2; y <= 17; y++) ship.setPixel(12, y, 15)
+    for (let x = 10; x <= 14; x++) ship.setPixel(x, 5, 14)
+    for (let y = 5; y <= 15; y++) {
+        const left = 12 - (y - 5)
+        for (let x = left; x <= 11; x++) ship.setPixel(x, y, sailColor)
+    }
+    for (let y = 8; y <= 15; y++) {
+        const right = 13 + (y - 8)
+        for (let x = 13; x <= right; x++) ship.setPixel(x, y, sailColor)
+    }
+    for (let y = 6; y <= 14; y += 3) {
+        ship.setPixel(11 - Math.floor((y - 5) * 0.7), y, trimColor)
+        ship.setPixel(13 + Math.floor((y - 8) * 0.8), y, trimColor)
+    }
+    for (let x = 4; x <= 19; x++) ship.setPixel(x, 17, 15)
+    for (let y = 18; y <= 20; y++) {
+        const inset = y - 18
+        for (let x = 4 + inset; x <= 19 - inset; x++) ship.setPixel(x, y, 14)
+    }
+    for (let x = 7; x <= 16; x++) ship.setPixel(x, 21, 15)
+    for (let x = 6; x <= 17; x++) ship.setPixel(x, 18, trimColor)
+    ship.setPixel(18, 15, 2)
+    ship.setPixel(19, 14, 15)
+    return ship
+}
+
+function createUnionJackPortImage(): Image {
+    const port = image.create(24, 24)
+    for (let y = 1; y <= 22; y++) port.setPixel(2, y, 15)
+    port.setPixel(1, 1, 5)
+    for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 20; x++) {
+            port.setPixel(x + 4, y + 2, 8)
+            const rising = Math.abs(y - x * 0.5)
+            const falling = Math.abs(y - (9 - x * 0.5))
+            if (rising <= 1.35 || falling <= 1.35) port.setPixel(x + 4, y + 2, 1)
+            if (Math.abs(y - (x * 0.5 + 1.1)) <= 0.55 ||
+                Math.abs(y - (9 - x * 0.5 - 1.1)) <= 0.55) port.setPixel(x + 4, y + 2, 2)
+            if ((x >= 8 && x <= 11) || (y >= 3 && y <= 6)) port.setPixel(x + 4, y + 2, 1)
+            if ((x >= 9 && x <= 10) || (y >= 4 && y <= 5)) port.setPixel(x + 4, y + 2, 2)
+        }
+    }
+    for (let x = 3; x <= 22; x++) {
+        port.setPixel(x, 18, 15)
+        port.setPixel(x, 19, 13)
+        if (x % 4 < 2) port.setPixel(x, 20, 11)
+        port.setPixel(x, 21, 15)
+    }
+    port.setPixel(4, 17, 5)
+    port.setPixel(21, 17, 5)
+    return port
+}
+
+function createCargoImage(): Image {
+    const box = image.create(16, 16)
+    for (let y = 2; y <= 13; y++) for (let x = 2; x <= 13; x++) box.setPixel(x, y, 14)
+    for (let x = 2; x <= 13; x++) { box.setPixel(x, 2, 15); box.setPixel(x, 13, 15) }
+    for (let y = 2; y <= 13; y++) { box.setPixel(2, y, 15); box.setPixel(13, y, 15) }
+    for (let y = 3; y <= 12; y++) { box.setPixel(7, y, 4); box.setPixel(8, y, 4) }
+    for (let x = 3; x <= 12; x++) { box.setPixel(x, 7, 4); box.setPixel(x, 8, 4) }
+    box.setPixel(7, 7, 5); box.setPixel(8, 7, 5); box.setPixel(7, 8, 5); box.setPixel(8, 8, 5)
+    box.setPixel(4, 4, 5); box.setPixel(11, 11, 5)
+    return box
+}
+
+function createFortImage(variant: number): Image {
+    const fort = image.create(20, 20)
+    for (let x = 3; x <= 16; x++) fort.setPixel(x, 17, 15)
+    for (let y = 7; y <= 16; y++) for (let x = 4; x <= 15; x++) fort.setPixel(x, y, 13)
+    for (let x = 4; x <= 15; x += 4) for (let y = 4; y <= 7; y++) fort.setPixel(x, y, 13)
+    for (let x = 4; x <= 15; x++) fort.setPixel(x, 7, 15)
+    for (let y = 5; y <= 15; y++) { fort.setPixel(3, y, 15); fort.setPixel(16, y, 15) }
+    fort.setPixel(5, 10, 8); fort.setPixel(14, 10, 8)
+    for (let y = 12; y <= 16; y++) { fort.setPixel(9, y, 14); fort.setPixel(10, y, 14) }
+    for (let y = 1; y <= 5; y++) fort.setPixel(10, y, 15)
+    fort.setPixel(11, 1, 2); fort.setPixel(12, 2, 2)
+    if (variant == 2) { fort.setPixel(8, 9, 5); fort.setPixel(11, 9, 5) }
+    return fort
+}
+
+function createColonyImage(): Image {
+    const building = image.create(24, 24)
+    for (let x = 3; x <= 21; x++) building.setPixel(x, 21, 15)
+    for (let y = 10; y <= 20; y++) for (let x = 5; x <= 19; x++) building.setPixel(x, y, 13)
+    for (let y = 4; y <= 10; y++) {
+        const inset = y - 4
+        for (let x = 3 + inset; x <= 21 - inset; x++) building.setPixel(x, y, 14)
+    }
+    for (let x = 5; x <= 19; x++) building.setPixel(x, 10, 15)
+    for (let x = 7; x <= 17; x += 5) building.setPixel(x, 7, 4)
+    for (let y = 11; y <= 19; y++) { building.setPixel(6, y, 14); building.setPixel(18, y, 14) }
+    for (let y = 15; y <= 20; y++) { building.setPixel(11, y, 14); building.setPixel(12, y, 14) }
+    building.setPixel(8, 13, 8); building.setPixel(9, 13, 8)
+    building.setPixel(16, 13, 8); building.setPixel(17, 13, 8)
+    for (let y = 1; y <= 6; y++) building.setPixel(4, y, 15)
+    building.setPixel(5, 1, 8); building.setPixel(6, 1, 1)
+    building.setPixel(5, 2, 1); building.setPixel(6, 2, 2)
+    return building
+}
+
+function createTraderImage(): Image {
+    const person = image.create(16, 24)
+    for (let x = 4; x <= 11; x++) person.setPixel(x, 3, 14)
+    for (let x = 5; x <= 10; x++) person.setPixel(x, 2, 15)
+    for (let y = 4; y <= 8; y++) for (let x = 5; x <= 10; x++) person.setPixel(x, y, 5)
+    person.setPixel(6, 6, 15); person.setPixel(9, 6, 15)
+    for (let y = 9; y <= 17; y++) for (let x = 3; x <= 12; x++) person.setPixel(x, y, 8)
+    person.setPixel(7, 9, 1); person.setPixel(8, 9, 1)
+    for (let y = 10; y <= 16; y++) person.setPixel(7, y, 13)
+    for (let y = 11; y <= 15; y++) { person.setPixel(2, y, 5); person.setPixel(13, y, 5) }
+    for (let y = 18; y <= 21; y++) {
+        person.setPixel(5, y, 15); person.setPixel(6, y, 15)
+        person.setPixel(9, y, 15); person.setPixel(10, y, 15)
+    }
+    person.setPixel(4, 22, 15); person.setPixel(11, 22, 15)
+    return person
+}
+
 function buildWorldMap(): void {
     const continentPoints: number[] = [
         21, 8, 18, 16, 11, 27, 9, 38, 12, 47, 9, 59, 16, 65, 25, 61, 34, 68, 42, 64, 51, 57, 55, 54,
@@ -87,13 +210,35 @@ function buildWorldMap(): void {
             }
         }
     }
+    // Intentional forest belts and mountain ridges replace mathematical speckles.
+    const forestCenters = [[28,28,11,8],[49,43,10,7],[68,29,9,7],[82,77,10,8],
+        [102,91,8,12],[132,112,12,7],[158,44,11,8],[177,163,9,8],[42,155,8,11]]
+    const mountainCenters = [[35,48,6,4],[74,83,7,4],[119,105,6,5],[151,129,8,4],[185,174,5,4]]
     for (let x = 2; x < MAP_WIDTH - 2; x++) {
         for (let y = 2; y < MAP_HEIGHT - 2; y++) {
-            if (mapImage.getPixel(x, y) == 2 && (x * 7 + y * 11) % 19 == 0) {
-                mapImage.setPixel(x, y, 4)
+            if (mapImage.getPixel(x, y) == 2) {
+                for (let i = 0; i < forestCenters.length; i++) {
+                    const f = forestCenters[i]
+                    const dx = (x - f[0]) / f[2], dy = (y - f[1]) / f[3]
+                    if (dx * dx + dy * dy < 1) mapImage.setPixel(x, y, 4)
+                }
+                for (let i = 0; i < mountainCenters.length; i++) {
+                    const m = mountainCenters[i]
+                    const dx = (x - m[0]) / m[2], dy = (y - m[1]) / m[3]
+                    if (dx * dx + dy * dy < 1 && (x + y) % 3 != 0) mapImage.setPixel(x, y, 7)
+                }
             }
-            if (mapImage.getPixel(x, y) == 1 && (x * 13 + y * 5) % 37 == 0) {
-                mapImage.setPixel(x, y, 5)
+        }
+    }
+    // Shallow water hugs the coastline to create a readable surf transition.
+    for (let x = 1; x < MAP_WIDTH - 1; x++) {
+        for (let y = 1; y < MAP_HEIGHT - 1; y++) {
+            if (mapImage.getPixel(x, y) == 1) {
+                let nearLand = false
+                for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+                    if (mapImage.getPixel(x + dx, y + dy) == 3) nearLand = true
+                }
+                if (nearLand) mapImage.setPixel(x, y, 5)
             }
         }
     }
@@ -117,50 +262,76 @@ function buildWorldMap(): void {
     }
     const transparentTile = image.create(16, 16)
     transparentTile.fill(0)
+    // Deep ocean: layered blue with repeating wave highlights.
     const waterTile = image.create(16, 16)
     waterTile.fill(8)
-    for (let y = 2; y < 16; y += 5) {
-        for (let x = (y % 2) * 2; x < 15; x += 8) {
+    for (let y = 1; y < 16; y += 4) {
+        const start = (y % 8 == 1) ? 2 : 7
+        for (let x = start; x < start + 5; x++) {
             waterTile.setPixel(x, y, 9)
-            waterTile.setPixel(x + 1, y, 9)
+            if (x < 15) waterTile.setPixel(x + 1, y, 9)
         }
+        waterTile.setPixel(start + 1, y + 1, 6)
     }
+    waterTile.setPixel(14, 12, 9); waterTile.setPixel(15, 12, 9)
+
+    // Grassland: grouped highlights rather than isolated random pixels.
     const landTile = image.create(16, 16)
     landTile.fill(7)
-    landTile.setPixel(2, 3, 6)
-    landTile.setPixel(3, 3, 6)
-    landTile.setPixel(10, 11, 5)
-    landTile.setPixel(11, 11, 5)
-    landTile.setPixel(6, 7, 6)
+    for (let x = 2; x <= 5; x++) landTile.setPixel(x, 3, 6)
+    landTile.setPixel(3, 4, 6); landTile.setPixel(10, 10, 6)
+    landTile.setPixel(11, 10, 6); landTile.setPixel(10, 11, 6)
+    landTile.setPixel(6, 14, 5)
+
+    // Sandy shoreline with a broken surf line and wet-sand accents.
     const coastTile = image.create(16, 16)
-    coastTile.fill(13)
-    coastTile.setPixel(3, 4, 5)
-    coastTile.setPixel(12, 10, 5)
+    coastTile.fill(5)
+    for (let x = 0; x < 16; x++) {
+        if (x % 4 != 1) coastTile.setPixel(x, 2 + (x % 3), 13)
+        if (x % 5 == 0) coastTile.setPixel(x, 5 + (x % 4), 6)
+    }
+    for (let x = 2; x < 14; x += 4) coastTile.setPixel(x, 12, 4)
+
+    // Forest: clustered canopy shapes with trunks and shadow pixels.
     const forestTile = image.create(16, 16)
     forestTile.fill(7)
-    forestTile.setPixel(3, 3, 6)
-    forestTile.setPixel(4, 3, 6)
-    forestTile.setPixel(2, 4, 6)
-    forestTile.setPixel(3, 5, 6)
-    forestTile.setPixel(11, 9, 6)
-    forestTile.setPixel(12, 9, 6)
-    forestTile.setPixel(10, 10, 6)
-    forestTile.setPixel(11, 11, 6)
+    for (let y = 2; y <= 7; y++) for (let x = 2; x <= 7; x++) {
+        if (Math.abs(x - 4) + Math.abs(y - 4) <= 4) forestTile.setPixel(x, y, 6)
+    }
+    for (let y = 8; y <= 13; y++) for (let x = 9; x <= 14; x++) {
+        if (Math.abs(x - 11) + Math.abs(y - 10) <= 4) forestTile.setPixel(x, y, 6)
+    }
+    forestTile.setPixel(4, 5, 7); forestTile.setPixel(11, 11, 7)
+    forestTile.setPixel(5, 7, 14); forestTile.setPixel(12, 13, 14)
+
+    // Turquoise shallows near beaches.
+    const shallowTile = image.create(16, 16)
+    shallowTile.fill(6)
+    for (let y = 2; y < 15; y += 5) for (let x = 1 + (y % 3); x < 14; x += 6) {
+        shallowTile.setPixel(x, y, 9); shallowTile.setPixel(x + 1, y, 9)
+    }
+    shallowTile.setPixel(3, 12, 8); shallowTile.setPixel(4, 12, 8)
+
+    // Gold dotted trade route across the blue sea.
     const routeTile = image.create(16, 16)
     routeTile.fill(8)
-    for (let y = 0; y < 16; y++) {
-        for (let x = 0; x < 16; x++) {
-            if ((x + y) % 5 < 2) routeTile.setPixel(x, y, 2)
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+        if (Math.abs(y - x) <= 1 && (x + y) % 4 != 1) routeTile.setPixel(x, y, 5)
+        else if (Math.abs(y - x) == 2 && (x + y) % 5 == 0) routeTile.setPixel(x, y, 4)
+    }
+
+    // Mountain tile: stepped pale peaks with darker foothills.
+    const mountainTile = image.create(16, 16)
+    mountainTile.fill(7)
+    for (let y = 3; y <= 12; y++) {
+        const half = Math.floor((y - 3) * 0.8)
+        for (let x = 7 - half; x <= 7 + half; x++) {
+            if (x >= 1 && x <= 14) mountainTile.setPixel(x, y, y < 8 ? 13 : 12)
         }
     }
-    const waveTile = image.create(16, 16)
-    waveTile.fill(8)
-    for (let x = 2; x < 14; x++) {
-        if (x % 3 != 0) {
-            waveTile.setPixel(x, 5, 9)
-            waveTile.setPixel(x - 1, 6, 9)
-        }
-    }
+    for (let x = 5; x <= 9; x++) mountainTile.setPixel(x, 7, 1)
+    mountainTile.setPixel(7, 4, 1); mountainTile.setPixel(6, 10, 14); mountainTile.setPixel(8, 11, 14)
+
     const mapData = control.createBuffer(4 + MAP_WIDTH * MAP_HEIGHT)
     mapData.setNumber(NumberFormat.UInt16LE, 0, MAP_WIDTH)
     mapData.setNumber(NumberFormat.UInt16LE, 2, MAP_HEIGHT)
@@ -169,12 +340,12 @@ function buildWorldMap(): void {
             mapData.setNumber(NumberFormat.UInt8LE, 4 + y * MAP_WIDTH + x, mapImage.getPixel(x, y))
         }
     }
-    const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile, forestTile, waveTile, routeTile], TileScale.Sixteen)
+    const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile, forestTile, shallowTile, routeTile, mountainTile], TileScale.Sixteen)
     tiles.setCurrentTilemap(world)
     for (let x = 0; x < MAP_WIDTH; x++) {
         for (let y = 0; y < MAP_HEIGHT; y++) {
             const tileIndex = mapImage.getPixel(x, y)
-            if (tileIndex == 2 || tileIndex == 3 || tileIndex == 4 || x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1) {
+            if (tileIndex == 2 || tileIndex == 3 || tileIndex == 4 || tileIndex == 7 || x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1) {
                 tiles.setWallAt(tiles.getTileLocation(x, y), true)
             }
         }
@@ -208,24 +379,7 @@ let colony: Sprite
 let colonyNPC: Sprite
 game.splash("The Atlantic Trade Route", "A British Empire voyage")
 buildWorldMap()
-let mySprite = sprites.create(img`
-.......f........
-......fff.......
-.....f111f......
-....f11111f.....
-...f1111111f....
-...f1111111f....
-....f11111f.....
-.....f1f1f......
-.....fefef......
-....feeeeef.....
-...feeeeeeef....
-....feeeeef.....
-.....feef.......
-......fff.......
-.......f........
-................
-`, SpriteKind.Player)
+let mySprite = sprites.create(createShipImage(false), SpriteKind.Player)
 mySprite.z = 10
 mySprite.setFlag(SpriteFlag.StayInScreen, false)
 info.setLife(3)
@@ -233,143 +387,22 @@ info.setScore(0)
 tiles.placeOnTile(mySprite, tiles.getTileLocation(PLAYER_START_COL, PLAYER_START_ROW))
 scene.cameraFollowSprite(mySprite)
 controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
-let myEnemy = sprites.create(img`
-.......f........
-......fff.......
-.....f222f......
-....f22222f.....
-...f2222222f....
-...f222f222f....
-....f22222f.....
-.....f2f2f......
-.....fefef......
-....ffffffff....
-...ffffefffff...
-....ffffffff....
-.....ffffff.....
-......ffff......
-.......ff.......
-................
-`, SpriteKind.Enemy)
+let myEnemy = sprites.create(createShipImage(true), SpriteKind.Enemy)
 tiles.placeOnTile(myEnemy, tiles.getTileLocation(PIRATE_COL, PIRATE_ROW))
 myEnemy.follow(mySprite, 45)
-homePort = sprites.create(img`
-..f.............
-..f.888888888...
-..f.888f888888...
-..f.88ff888888...
-..f.8fff888888...
-..f.111111111...
-..f.88fff88888...
-..f.88ff888888...
-..f.888f888888...
-..f.888888888...
-..f.............
-..f.............
-..f.............
-..f.............
-..f.............
-..f.............
-..f.............
-..fff...........
-`, SpriteKind.HomePort)
+homePort = sprites.create(createUnionJackPortImage(), SpriteKind.HomePort)
 tiles.placeOnTile(homePort, tiles.getTileLocation(HOME_PORT_COL, HOME_PORT_ROW))
 homePort.z = 2
-cargo = sprites.create(img`
-....ffffffff....
-...feeeeeeeef...
-..fee5eeee5eef..
-..fee5eeee5eef..
-..feee5ee5eeef..
-..feeee55eeeef..
-..feeee55eeeef..
-..feee5ee5eeef..
-..fee5eeee5eef..
-..fee5eeee5eef..
-..feeeeeeeeeef..
-...feeeeeeeef...
-....ffffffff....
-................
-................
-................
-`, SpriteKind.Cargo)
+cargo = sprites.create(createCargoImage(), SpriteKind.Cargo)
 tiles.placeOnTile(cargo, tiles.getTileLocation(CARGO_COL, CARGO_ROW))
-let fortOne = sprites.create(img`
-......f2f.......
-.....f222f......
-....ffffffff....
-...fddddddddf...
-...fdeddddedf...
-...fddddddddf...
-...fddfddfddf...
-...fddddddddf...
-..fddddddddddf..
-..fddddddddddf..
-..fddddddddddf..
-..fddfddddfddf..
-..fddfddddfddf..
-..ffffffffffff..
-................
-................
-`, SpriteKind.FortMarker)
+let fortOne = sprites.create(createFortImage(1), SpriteKind.FortMarker)
 tiles.placeOnTile(fortOne, tiles.getTileLocation(FORT_ONE_COL, FORT_ONE_ROW))
-let fortTwo = sprites.create(img`
-.......f........
-......f2f.......
-.....f222f......
-......f2f.......
-.....fffff......
-....fdddddf.....
-...fdddddddf....
-...fdeddddef....
-...fdddddddf....
-...fddfdfddf....
-...fddfdfddf....
-...fdddddddf....
-....fdddddf.....
-.....fffff......
-......fff.......
-................
-`, SpriteKind.FortMarker)
+let fortTwo = sprites.create(createFortImage(2), SpriteKind.FortMarker)
 tiles.placeOnTile(fortTwo, tiles.getTileLocation(FORT_TWO_COL, FORT_TWO_ROW))
-colony = sprites.create(img`
-......f.........
-.....f777f......
-....f77777f.....
-...f7777777f....
-......f.........
-......f.........
-......f.........
-.....fefef......
-....feeeef......
-...feeeeeef.....
-...fddddddf.....
-....fddddf......
-.....ffffff.....
-...dddddddd.....
-..dddddddddd....
-................
-`, SpriteKind.ColonyMarker)
+colony = sprites.create(createColonyImage(), SpriteKind.ColonyMarker)
 tiles.placeOnTile(colony, tiles.getTileLocation(COLONY_COL, COLONY_ROW))
 colony.z = 2
-colonyNPC = sprites.create(img`
-.....fffff......
-....feeeeef.....
-....fe33ef......
-....fe33ef......
-.....feeef......
-......f3f.......
-....ff888ff.....
-...f8888888f....
-...f8888888f....
-....f88888f.....
-....feeeeef.....
-....feeeeef.....
-....fef.fef.....
-....fef.fef.....
-....fff.fff.....
-................
-`, SpriteKind.ColonyNPC)
+colonyNPC = sprites.create(createTraderImage(), SpriteKind.ColonyNPC)
 tiles.placeOnTile(colonyNPC, tiles.getTileLocation(COLONY_NPC_COL, COLONY_NPC_ROW))
 colonyNPC.z = 3
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Cargo, function (player, item) {
@@ -397,24 +430,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate)
         myEnemy.setPosition(PIRATE_COL * 16 + 8, PIRATE_ROW * 16 + 8)
         if (hasCargo) {
             hasCargo = false
-            cargo = sprites.create(img`
-....ffffffff....
-...feeeeeeeef...
-..fee5eeee5eef..
-..fee5eeee5eef..
-..feee5ee5eeef..
-..feeee55eeeef..
-..feeee55eeeef..
-..feee5ee5eeef..
-..fee5eeee5eef..
-..fee5eeee5eef..
-..feeeeeeeeeef..
-...feeeeeeeef...
-....ffffffff....
-................
-................
-................
-`, SpriteKind.Cargo)
+            cargo = sprites.create(createCargoImage(), SpriteKind.Cargo)
             tiles.placeOnTile(cargo, tiles.getTileLocation(CARGO_COL, CARGO_ROW))
         }
         pause(900)
