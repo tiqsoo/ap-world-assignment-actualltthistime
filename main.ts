@@ -129,51 +129,43 @@ function createColonyImage(): Image {
     return building
 }
 
-function createTraderImage(): Image {
-    const person = image.create(16, 24)
-    for (let x = 4; x <= 11; x++) person.setPixel(x, 3, 14)
-    for (let x = 5; x <= 10; x++) person.setPixel(x, 2, 15)
-    for (let y = 4; y <= 8; y++) for (let x = 5; x <= 10; x++) person.setPixel(x, y, 5)
-    person.setPixel(6, 6, 15); person.setPixel(9, 6, 15)
-    for (let y = 9; y <= 17; y++) for (let x = 3; x <= 12; x++) person.setPixel(x, y, 8)
-    person.setPixel(7, 9, 1); person.setPixel(8, 9, 1)
-    for (let y = 10; y <= 16; y++) person.setPixel(7, y, 13)
-    for (let y = 11; y <= 15; y++) { person.setPixel(2, y, 5); person.setPixel(13, y, 5) }
-    for (let y = 18; y <= 21; y++) {
-        person.setPixel(5, y, 15); person.setPixel(6, y, 15)
-        person.setPixel(9, y, 15); person.setPixel(10, y, 15)
+function createNoobImage(trader: boolean): Image {
+    // Classic early Roblox noob proportions: square yellow head/arms,
+    // blue torso, green legs. The trader gets a red-brown shirt accent.
+    const avatar = image.create(24, 24)
+    const skin = 5
+    const shirt = trader ? 13 : 8
+    const pants = 7
+    // Blocky head with a simple face.
+    for (let y = 2; y <= 8; y++) for (let x = 8; x <= 15; x++) avatar.setPixel(x, y, skin)
+    for (let x = 10; x <= 11; x++) avatar.setPixel(x, 5, 15)
+    for (let x = 13; x <= 14; x++) avatar.setPixel(x, 5, 15)
+    for (let x = 11; x <= 13; x++) avatar.setPixel(x, 7, 2)
+    // Square torso and straight block arms.
+    for (let y = 9; y <= 15; y++) for (let x = 8; x <= 15; x++) avatar.setPixel(x, y, shirt)
+    for (let y = 9; y <= 15; y++) {
+        for (let x = 3; x <= 7; x++) avatar.setPixel(x, y, skin)
+        for (let x = 16; x <= 20; x++) avatar.setPixel(x, y, skin)
     }
-    person.setPixel(4, 22, 15); person.setPixel(11, 22, 15)
-    return person
+    // Two separate rectangular legs and dark shoes.
+    for (let y = 16; y <= 21; y++) {
+        for (let x = 8; x <= 11; x++) avatar.setPixel(x, y, pants)
+        for (let x = 12; x <= 15; x++) avatar.setPixel(x, y, pants)
+    }
+    for (let x = 8; x <= 11; x++) avatar.setPixel(x, 22, 15)
+    for (let x = 12; x <= 15; x++) avatar.setPixel(x, 22, 15)
+    // Crisp dark pixel outline keeps the block silhouette readable.
+    for (let x = 8; x <= 15; x++) { avatar.setPixel(x, 1, 15); avatar.setPixel(x, 8, 15) }
+    for (let y = 2; y <= 7; y++) { avatar.setPixel(7, y, 15); avatar.setPixel(16, y, 15) }
+    return avatar
+}
+
+function createTraderImage(): Image {
+    return createNoobImage(true)
 }
 
 function createSailorImage(): Image {
-    const sailor = image.create(16, 24)
-    // Cap and face
-    for (let x = 4; x <= 11; x++) sailor.setPixel(x, 3, 4)
-    for (let x = 5; x <= 10; x++) sailor.setPixel(x, 2, 15)
-    for (let y = 4; y <= 8; y++) for (let x = 5; x <= 10; x++) sailor.setPixel(x, y, 5)
-    sailor.setPixel(6, 6, 15)
-    sailor.setPixel(9, 6, 15)
-    // Blue naval coat with a white collar
-    for (let y = 9; y <= 17; y++) for (let x = 3; x <= 12; x++) sailor.setPixel(x, y, 8)
-    sailor.setPixel(7, 9, 1)
-    sailor.setPixel(8, 9, 1)
-    for (let y = 10; y <= 16; y++) sailor.setPixel(7, y, 15)
-    // Arms, trousers, and boots
-    for (let y = 11; y <= 15; y++) {
-        sailor.setPixel(2, y, 5)
-        sailor.setPixel(13, y, 5)
-    }
-    for (let y = 18; y <= 21; y++) {
-        sailor.setPixel(5, y, 15)
-        sailor.setPixel(6, y, 15)
-        sailor.setPixel(9, y, 15)
-        sailor.setPixel(10, y, 15)
-    }
-    sailor.setPixel(4, 22, 15)
-    sailor.setPixel(11, 22, 15)
-    return sailor
+    return createNoobImage(false)
 }
 
 function createDockImage(): Image {
@@ -430,6 +422,7 @@ const COMPASS_BOOST_SPEED = 145
 const COMPASS_BOOST_DURATION_MS = 2000
 let hasCargo = false
 let pirateHitLock = false
+let pirateAlerted = false
 let compassReady = true
 let sailorMode = false
 let traderSpoken = false
@@ -514,7 +507,17 @@ function setSailorTerrainMode(onFoot: boolean): void {
 // The pirate hunts in open water but turns away from any coastline.
 game.onUpdateInterval(100, function () {
     if (sailorMode) {
+        // The pirate waits offshore while the sailor explores the colony.
         myEnemy.setVelocity(0, 0)
+        return
+    }
+    if (pirateAlerted) {
+        // Once the player boards, the pirate recognizes the ship and commits to the chase.
+        const alertX = mySprite.x - myEnemy.x
+        const alertY = mySprite.y - myEnemy.y
+        const alertLength = Math.sqrt(alertX * alertX + alertY * alertY)
+        if (alertLength > 1) myEnemy.setVelocity(alertX / alertLength * 58, alertY / alertLength * 58)
+        else myEnemy.setVelocity(0, 0)
         return
     }
     const centerCol = Math.floor(myEnemy.x / 16)
@@ -574,7 +577,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.HomePort, function (player, port
     if (hasCargo && !sailorMode) {
         hasCargo = false
         info.changeScoreBy(50)
-        game.splash("Trade route complete!", "Cargo delivered to London.")
+        game.splash("VICTORY!", "Cargo delivered. The Atlantic voyage is complete.")
         game.over(true)
     }
 })
@@ -586,6 +589,7 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate)
         player.setFlag(SpriteFlag.GhostThroughSprites, true)
         tiles.placeOnTile(player, tiles.getTileLocation(PLAYER_START_COL, PLAYER_START_ROW))
         myEnemy.setPosition(PIRATE_COL * 16 + 8, PIRATE_ROW * 16 + 8)
+        pirateAlerted = false
         if (hasCargo) {
             hasCargo = false
             spawnCargoAtColony()
@@ -606,8 +610,10 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             mySprite.setVelocity(0, 0)
             controller.moveSprite(mySprite, 0, 0)
             mySprite.setFlag(SpriteFlag.Invisible, true)
+            // The pirate quietly moves to nearby open water and waits for the ship.
             myEnemy.setVelocity(0, 0)
-            myEnemy.setFlag(SpriteFlag.Invisible, true)
+            myEnemy.setPosition((DOCK_COL + 7) * 16 + 8, (DOCK_ROW - 4) * 16 + 8)
+            pirateAlerted = false
             sailor = sprites.create(createSailorImage(), SpriteKind.Sailor)
             sailor.z = 21
             sailor.setFlag(SpriteFlag.StayInScreen, false)
@@ -635,6 +641,7 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             mySprite.setFlag(SpriteFlag.Invisible, false)
             controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
             myEnemy.setFlag(SpriteFlag.Invisible, false)
+            pirateAlerted = true
             scene.cameraFollowSprite(mySprite)
             game.splash("Back aboard!", hasCargo ? "Return to London with the cargo." : "The trader is waiting inland.")
         } else {
