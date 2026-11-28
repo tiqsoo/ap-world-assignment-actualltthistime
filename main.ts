@@ -417,32 +417,37 @@ function buildWorldMap(): void {
     }
     shallowTile.setPixel(3, 12, 8); shallowTile.setPixel(4, 12, 8)
 
-    // A single gold arrow points southwest from Britain toward the Caribbean.
+    // One clean southwest-pointing arrow; no overlapping decorative strokes.
     const routeTile = image.create(16, 16)
     routeTile.fill(8)
-    for (let y = 2; y < 15; y += 5) {
-        for (let x = 2 + (y % 3); x < 14; x += 6) routeTile.setPixel(x, y, 9)
-    }
-    // Dark outline gives the arrow contrast against the ocean.
-    for (let i = 0; i <= 5; i++) {
-        routeTile.setPixel(2, 13 - i, 4)
-        routeTile.setPixel(2 + i, 13, 4)
-    }
+    routeTile.setPixel(12, 2, 9); routeTile.setPixel(13, 2, 9)
+    routeTile.setPixel(2, 14, 9); routeTile.setPixel(3, 14, 9)
+    // Dark outline for the diagonal shaft.
     for (let i = 0; i <= 7; i++) {
-        routeTile.setPixel(5 + i, 11 - i, 4)
+        const x = 12 - i
+        const y = 2 + i
+        routeTile.setPixel(x + 1, y, 4)
+        routeTile.setPixel(x, y - 1, 4)
+        routeTile.setPixel(x - 1, y - 1, 4)
+        routeTile.setPixel(x - 2, y, 4)
+        routeTile.setPixel(x - 1, y + 1, 4)
     }
-    // Gold arrowhead and shaft, angled down-left toward the Caribbean.
-    for (let i = 0; i <= 5; i++) {
-        routeTile.setPixel(3, 12 - i, 5)
-        routeTile.setPixel(3 + i, 12, 5)
-    }
+    // Gold center of the shaft.
     for (let i = 0; i <= 7; i++) {
-        routeTile.setPixel(5 + i, 10 - i, 5)
-        if (i < 7) routeTile.setPixel(6 + i, 10 - i, 5)
+        const x = 12 - i
+        const y = 2 + i
+        routeTile.setPixel(x, y, 5)
+        routeTile.setPixel(x - 1, y, 5)
     }
-    routeTile.setPixel(2, 13, 5)
-    routeTile.setPixel(3, 12, 5)
-    routeTile.setPixel(4, 11, 5)
+    // Broad, readable arrowhead pointing toward the lower-left.
+    for (let i = 0; i <= 6; i++) {
+        routeTile.setPixel(2, 5 + i, 4)
+        routeTile.setPixel(3 + i, 11, 4)
+    }
+    for (let i = 0; i <= 6; i++) {
+        routeTile.setPixel(3, 5 + i, 5)
+        routeTile.setPixel(4 + i, 10, 5)
+    }
 
     // Mountain tile: stepped pale peaks with darker foothills.
     const mountainTile = image.create(16, 16)
@@ -608,6 +613,11 @@ function setSailorTerrainMode(onFoot: boolean): void {
 
 // The pirate hunts in open water but turns away from any coastline.
 game.onUpdateInterval(100, function () {
+    // Docking is based on reaching the London harbor, not pixel-perfect overlap.
+    if (hasCargo && !sailorMode && distanceToTile(mySprite, HOME_PORT_COL, HOME_PORT_ROW) <= 40) {
+        completeLondonDelivery()
+        return
+    }
     // End the compass boost without pausing the whole game loop.
     if (compassBoostTicks > 0) {
         compassBoostTicks += -1
@@ -697,13 +707,19 @@ sprites.onOverlap(SpriteKind.Sailor, SpriteKind.Cargo, function (walker, item) {
     }
 })
 
-sprites.onOverlap(SpriteKind.Player, SpriteKind.HomePort, function (player, port) {
+function completeLondonDelivery(): void {
     if (hasCargo && !sailorMode) {
         hasCargo = false
         info.changeScoreBy(50)
         game.splash("VICTORY!", "Cargo delivered. The Atlantic voyage is complete.")
         game.over(true)
     }
+}
+
+// Keep the overlap trigger, but also check a generous harbor radius. This avoids
+// missing delivery when the ship reaches the port area without sprite overlap.
+sprites.onOverlap(SpriteKind.Player, SpriteKind.HomePort, function (player, port) {
+    completeLondonDelivery()
 })
 
 // Make the losing condition explicit: the third pirate collision ends the voyage.
