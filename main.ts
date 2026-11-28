@@ -361,18 +361,9 @@ function buildWorldMap(): void {
             if (dx * dx + dy * dy <= 1) mapImage.setPixel(x, y, 1)
         }
     }
-    const routePoints = [[93, 35], [87, 42], [81, 49], [75, 56], [69, 63], [64, 68], [58, 72]]
-    for (let p = 0; p < routePoints.length - 1; p++) {
-        const ax = routePoints[p][0], ay = routePoints[p][1]
-        const bx = routePoints[p + 1][0], by = routePoints[p + 1][1]
-        const steps = Math.max(Math.abs(bx - ax), Math.abs(by - ay))
-        for (let i = 0; i <= steps; i++) {
-            if (i % 3 != 1) {
-                const x = Math.round(ax + (bx - ax) * i / steps)
-                const y = Math.round(ay + (by - ay) * i / steps)
-                if (mapImage.getPixel(x, y) == 1 || mapImage.getPixel(x, y) == 5) mapImage.setPixel(x, y, 6)
-            }
-        }
+    // One clear arrow marks the southwest sailing direction toward the Caribbean.
+    if (mapImage.getPixel(75, 56) == 1 || mapImage.getPixel(75, 56) == 5) {
+        mapImage.setPixel(75, 56, 6)
     }
     const transparentTile = image.create(16, 16)
     transparentTile.fill(0)
@@ -426,13 +417,32 @@ function buildWorldMap(): void {
     }
     shallowTile.setPixel(3, 12, 8); shallowTile.setPixel(4, 12, 8)
 
-    // Gold dotted trade route across the blue sea.
+    // A single gold arrow points southwest from Britain toward the Caribbean.
     const routeTile = image.create(16, 16)
     routeTile.fill(8)
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-        if (Math.abs(y - (15 - x)) <= 1 && (x + y) % 4 != 1) routeTile.setPixel(x, y, 5)
-        else if (Math.abs(y - (15 - x)) == 2 && (x + y) % 5 == 0) routeTile.setPixel(x, y, 4)
+    for (let y = 2; y < 15; y += 5) {
+        for (let x = 2 + (y % 3); x < 14; x += 6) routeTile.setPixel(x, y, 9)
     }
+    // Dark outline gives the arrow contrast against the ocean.
+    for (let i = 0; i <= 5; i++) {
+        routeTile.setPixel(2, 13 - i, 4)
+        routeTile.setPixel(2 + i, 13, 4)
+    }
+    for (let i = 0; i <= 7; i++) {
+        routeTile.setPixel(5 + i, 11 - i, 4)
+    }
+    // Gold arrowhead and shaft, angled down-left toward the Caribbean.
+    for (let i = 0; i <= 5; i++) {
+        routeTile.setPixel(3, 12 - i, 5)
+        routeTile.setPixel(3 + i, 12, 5)
+    }
+    for (let i = 0; i <= 7; i++) {
+        routeTile.setPixel(5 + i, 10 - i, 5)
+        if (i < 7) routeTile.setPixel(6 + i, 10 - i, 5)
+    }
+    routeTile.setPixel(2, 13, 5)
+    routeTile.setPixel(3, 12, 5)
+    routeTile.setPixel(4, 11, 5)
 
     // Mountain tile: stepped pale peaks with darker foothills.
     const mountainTile = image.create(16, 16)
@@ -508,7 +518,7 @@ let colonyNPC: Sprite
 let dockMarker: Sprite
 let sailor: Sprite
 
-game.splash("The Atlantic Trade Route", "A British Empire voyage")
+game.splash("The Atlantic Trade Route", "Bring Caribbean cargo to London")
 buildWorldMap()
 
 let mySprite = sprites.create(createShipImage(false), SpriteKind.Player)
