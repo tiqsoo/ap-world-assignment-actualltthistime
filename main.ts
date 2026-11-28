@@ -352,8 +352,8 @@ function buildWorldMap(): void {
             }
         }
     }
-    // Keep the British Isles visible and cut only a compact harbor into
-    // the southeast shore. The Union Jack stays on land, beside the water.
+    // Keep the British Isles visible and cut a compact navigable harbor into
+    // the southeast shore; the Union Jack port marker sits inside that harbor.
     for (let x = 93; x <= 103; x++) {
         for (let y = 31; y <= 45; y++) {
             const dx = (x - 98) / 5
@@ -417,12 +417,12 @@ function buildWorldMap(): void {
     }
     shallowTile.setPixel(3, 12, 8); shallowTile.setPixel(4, 12, 8)
 
-    // One clean southwest-pointing arrow; no overlapping decorative strokes.
+    // Clean southwest-pointing arrow: outlined diagonal shaft and a clear V head.
     const routeTile = image.create(16, 16)
     routeTile.fill(8)
     routeTile.setPixel(12, 2, 9); routeTile.setPixel(13, 2, 9)
     routeTile.setPixel(2, 14, 9); routeTile.setPixel(3, 14, 9)
-    // Dark outline for the diagonal shaft.
+    // Dark outline around the diagonal shaft.
     for (let i = 0; i <= 7; i++) {
         const x = 12 - i
         const y = 2 + i
@@ -432,21 +432,21 @@ function buildWorldMap(): void {
         routeTile.setPixel(x - 2, y, 4)
         routeTile.setPixel(x - 1, y + 1, 4)
     }
-    // Gold center of the shaft.
+    // Gold shaft center.
     for (let i = 0; i <= 7; i++) {
         const x = 12 - i
         const y = 2 + i
         routeTile.setPixel(x, y, 5)
         routeTile.setPixel(x - 1, y, 5)
     }
-    // Broad, readable arrowhead pointing toward the lower-left.
-    for (let i = 0; i <= 6; i++) {
-        routeTile.setPixel(2, 5 + i, 4)
-        routeTile.setPixel(3 + i, 11, 4)
+    // Arrowhead tip points southwest; both arms open back toward the northeast.
+    for (let i = 0; i <= 5; i++) {
+        routeTile.setPixel(2 + Math.floor(i * 0.65), 13 - i, 4)
+        routeTile.setPixel(2 + i, 13 - Math.floor(i * 0.4), 4)
     }
-    for (let i = 0; i <= 6; i++) {
-        routeTile.setPixel(3, 5 + i, 5)
-        routeTile.setPixel(4 + i, 10, 5)
+    for (let i = 0; i <= 5; i++) {
+        routeTile.setPixel(3 + Math.floor(i * 0.65), 13 - i, 5)
+        routeTile.setPixel(3 + i, 13 - Math.floor(i * 0.4), 5)
     }
 
     // Mountain tile: stepped pale peaks with darker foothills.
@@ -483,8 +483,8 @@ function buildWorldMap(): void {
 }
 const PLAYER_START_COL = 95
 const PLAYER_START_ROW = 35
-const HOME_PORT_COL = 93
-const HOME_PORT_ROW = 33
+const HOME_PORT_COL = 98
+const HOME_PORT_ROW = 38
 const DOCK_COL = 58
 const DOCK_ROW = 72
 const SAILOR_START_COL = 56
@@ -587,19 +587,19 @@ function distanceToTile(sprite: Sprite, col: number, row: number): number {
 // Ships are blocked by all land/coast tiles; the sailor can walk on grass and beach,
 // but still cannot walk into the ocean, forests, or mountains.
 function setSailorTerrainMode(onFoot: boolean): void {
-    // Rebuild collision across the entire map whenever control changes.
-    // Updating only the colony patch left stale wall states behind after boarding.
-    for (let x = 0; x < MAP_WIDTH; x++) {
-        for (let y = 0; y < MAP_HEIGHT; y++) {
+    // Only the colony area needs different collision while the sailor is ashore.
+    // The rest of the 200×200 map keeps its normal ship collision, avoiding a
+    // 40,000-tile rebuild every time the player boards or leaves the ship.
+    for (let x = 45; x <= 62; x++) {
+        for (let y = 63; y <= 78; y++) {
             const tileIndex = worldTerrain.getPixel(x, y)
-            const boundary = x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1
             if (onFoot) {
-                // The sailor walks on land and coast, never into ocean, forest,
+                // The sailor can walk on land and beach, but not water, forest,
                 // shallow surf, the route marker, or mountains.
-                tiles.setWallAt(tiles.getTileLocation(x, y), boundary || tileIndex == 1 || tileIndex == 4 || tileIndex == 5 || tileIndex == 6 || tileIndex == 7)
+                tiles.setWallAt(tiles.getTileLocation(x, y), tileIndex == 1 || tileIndex == 4 || tileIndex == 5 || tileIndex == 6 || tileIndex == 7)
             } else {
-                // The ship sails on water and shallow water; all land is solid.
-                tiles.setWallAt(tiles.getTileLocation(x, y), boundary || tileIndex == 2 || tileIndex == 3 || tileIndex == 4 || tileIndex == 7)
+                // Restore ship rules: all land, coast, forest, and mountains block.
+                tiles.setWallAt(tiles.getTileLocation(x, y), tileIndex == 2 || tileIndex == 3 || tileIndex == 4 || tileIndex == 7)
             }
         }
     }
