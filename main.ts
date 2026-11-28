@@ -102,6 +102,19 @@ function buildWorldMap(): void {
             mapImage.setPixel(x, y, 1)
         }
     }
+    const routePoints = [[93, 35], [87, 42], [81, 49], [75, 56], [69, 63], [64, 69], [61, 72]]
+    for (let p = 0; p < routePoints.length - 1; p++) {
+        const ax = routePoints[p][0], ay = routePoints[p][1]
+        const bx = routePoints[p + 1][0], by = routePoints[p + 1][1]
+        const steps = Math.max(Math.abs(bx - ax), Math.abs(by - ay))
+        for (let i = 0; i <= steps; i++) {
+            if (i % 3 != 1) {
+                const x = Math.round(ax + (bx - ax) * i / steps)
+                const y = Math.round(ay + (by - ay) * i / steps)
+                if (mapImage.getPixel(x, y) == 1) mapImage.setPixel(x, y, 6)
+            }
+        }
+    }
     const transparentTile = image.create(16, 16)
     transparentTile.fill(0)
     const waterTile = image.create(16, 16)
@@ -133,6 +146,13 @@ function buildWorldMap(): void {
     forestTile.setPixel(12, 9, 6)
     forestTile.setPixel(10, 10, 6)
     forestTile.setPixel(11, 11, 6)
+    const routeTile = image.create(16, 16)
+    routeTile.fill(8)
+    for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+            if ((x + y) % 5 < 2) routeTile.setPixel(x, y, 2)
+        }
+    }
     const waveTile = image.create(16, 16)
     waveTile.fill(8)
     for (let x = 2; x < 14; x++) {
@@ -149,7 +169,7 @@ function buildWorldMap(): void {
             mapData.setNumber(NumberFormat.UInt8LE, 4 + y * MAP_WIDTH + x, mapImage.getPixel(x, y))
         }
     }
-    const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile, forestTile, waveTile], TileScale.Sixteen)
+    const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile, forestTile, waveTile, routeTile], TileScale.Sixteen)
     tiles.setCurrentTilemap(world)
     for (let x = 0; x < MAP_WIDTH; x++) {
         for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -236,11 +256,13 @@ myEnemy.follow(mySprite, 45)
 homePort = sprites.create(img`
 ..f.............
 ..f.888888888...
-..f.881118811...
-..f.881118811...
+..f.888f888888...
+..f.88ff888888...
+..f.8fff888888...
 ..f.111111111...
-..f.881218811...
-..f.881218811...
+..f.88fff88888...
+..f.88ff888888...
+..f.888f888888...
 ..f.888888888...
 ..f.............
 ..f.............
