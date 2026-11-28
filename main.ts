@@ -334,9 +334,14 @@ function buildWorldMap(): void {
             }
         }
     }
-    for (let x = 91; x <= 95; x++) {
-        for (let y = 32; y <= 38; y++) {
-            mapImage.setPixel(x, y, 1)
+    // Open a rounded harbor around London. The old 5x7 patch left land
+    // immediately beside the ship spawn, so steering toward that edge felt
+    // like the ship was randomly stopping against an invisible wall.
+    for (let x = 87; x <= 101; x++) {
+        for (let y = 27; y <= 43; y++) {
+            const dx = (x - 94) / 7
+            const dy = (y - 35) / 8
+            if (dx * dx + dy * dy <= 1) mapImage.setPixel(x, y, 1)
         }
     }
     const routePoints = [[93, 35], [87, 42], [81, 49], [75, 56], [69, 63], [64, 68], [58, 72]]
@@ -475,6 +480,7 @@ let pirateGraceTicks = 0
 let shipBoardingX = 0
 let shipBoardingY = 0
 let compassReady = true
+let compassBoostTicks = 0
 let sailorMode = false
 let traderSpoken = false
 let cargoSpawned = false
@@ -575,6 +581,14 @@ function setSailorTerrainMode(onFoot: boolean): void {
 
 // The pirate hunts in open water but turns away from any coastline.
 game.onUpdateInterval(100, function () {
+    // End the compass boost without pausing the whole game loop.
+    if (compassBoostTicks > 0) {
+        compassBoostTicks += -1
+        if (compassBoostTicks == 0) {
+            if (!sailorMode) controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
+            compassReady = true
+        }
+    }
     if (sailorMode) {
         // The pirate waits offshore while the sailor explores the colony.
         myEnemy.setVelocity(0, 0)
@@ -688,9 +702,11 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate)
 
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (!sailorMode) {
-        if (distanceToTile(mySprite, DOCK_COL, DOCK_ROW) <= 30) {
+        if (distanceToTile(mySprite, DOCK_COL, DOCK_ROW) <= 40) {
             // Anchor the ship offshore and switch control to the sailor on land.
             sailorMode = true
+            compassBoostTicks = 0
+            compassReady = true
             setSailorTerrainMode(true)
             mySprite.setVelocity(0, 0)
             controller.moveSprite(mySprite, 0, 0)
@@ -723,6 +739,9 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             setSailorTerrainMode(false)
             sailor.destroy()
             sailorMode = false
+            // Never resume sailing from the shoreline tile where the player
+            // happened to stop. This is verified open ocean beside the pier.
+            tiles.placeOnTile(mySprite, tiles.getTileLocation(60, 72))
             mySprite.setFlag(SpriteFlag.Invisible, false)
             controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
             myEnemy.setFlag(SpriteFlag.Invisible, false)
@@ -746,9 +765,7 @@ game.showLongText("Captain, sail from London to the British Caribbean colony. Us
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     if (compassReady && !sailorMode) {
         compassReady = false
+        compassBoostTicks = COMPASS_BOOST_DURATION_MS / 100
         controller.moveSprite(mySprite, COMPASS_BOOST_SPEED, COMPASS_BOOST_SPEED)
-        pause(COMPASS_BOOST_DURATION_MS)
-        controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
-        compassReady = true
     }
 })
