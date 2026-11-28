@@ -352,13 +352,12 @@ function buildWorldMap(): void {
             }
         }
     }
-    // Open a rounded harbor around London. The old 5x7 patch left land
-    // immediately beside the ship spawn, so steering toward that edge felt
-    // like the ship was randomly stopping against an invisible wall.
-    for (let x = 87; x <= 101; x++) {
-        for (let y = 27; y <= 43; y++) {
-            const dx = (x - 94) / 7
-            const dy = (y - 35) / 8
+    // Keep the British Isles visible and cut only a compact harbor into
+    // the southeast shore. The Union Jack stays on land, beside the water.
+    for (let x = 93; x <= 103; x++) {
+        for (let y = 31; y <= 45; y++) {
+            const dx = (x - 98) / 5
+            const dy = (y - 38) / 7
             if (dx * dx + dy * dy <= 1) mapImage.setPixel(x, y, 1)
         }
     }
@@ -470,7 +469,7 @@ function buildWorldMap(): void {
 const PLAYER_START_COL = 95
 const PLAYER_START_ROW = 35
 const HOME_PORT_COL = 93
-const HOME_PORT_ROW = 35
+const HOME_PORT_ROW = 33
 const DOCK_COL = 58
 const DOCK_ROW = 72
 const SAILOR_START_COL = 56
