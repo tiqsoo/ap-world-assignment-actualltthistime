@@ -423,6 +423,10 @@ const COMPASS_BOOST_DURATION_MS = 2000
 let hasCargo = false
 let pirateHitLock = false
 let pirateAlerted = false
+let pirateHuntPending = false
+let pirateGraceTicks = 0
+let shipBoardingX = 0
+let shipBoardingY = 0
 let compassReady = true
 let sailorMode = false
 let traderSpoken = false
@@ -511,8 +515,22 @@ game.onUpdateInterval(100, function () {
         myEnemy.setVelocity(0, 0)
         return
     }
+    if (pirateHuntPending) {
+        // Give the player time to get underway. The pirate only gives chase
+        // after 4 seconds AND once the ship has cleared the dock area.
+        pirateGraceTicks += 1
+        const sailedX = mySprite.x - shipBoardingX
+        const sailedY = mySprite.y - shipBoardingY
+        if (pirateGraceTicks >= 40 && sailedX * sailedX + sailedY * sailedY >= 48 * 48) {
+            pirateHuntPending = false
+            pirateAlerted = true
+        } else {
+            myEnemy.setVelocity(0, 0)
+            return
+        }
+    }
     if (pirateAlerted) {
-        // Once the player boards, the pirate recognizes the ship and commits to the chase.
+        // After the grace period, the pirate recognizes the ship and commits to the chase.
         const alertX = mySprite.x - myEnemy.x
         const alertY = mySprite.y - myEnemy.y
         const alertLength = Math.sqrt(alertX * alertX + alertY * alertY)
@@ -590,6 +608,8 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate)
         tiles.placeOnTile(player, tiles.getTileLocation(PLAYER_START_COL, PLAYER_START_ROW))
         myEnemy.setPosition(PIRATE_COL * 16 + 8, PIRATE_ROW * 16 + 8)
         pirateAlerted = false
+        pirateHuntPending = false
+        pirateGraceTicks = 0
         if (hasCargo) {
             hasCargo = false
             spawnCargoAtColony()
@@ -641,7 +661,13 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
             mySprite.setFlag(SpriteFlag.Invisible, false)
             controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
             myEnemy.setFlag(SpriteFlag.Invisible, false)
-            pirateAlerted = true
+            // Start the ambush timer, but do not let the pirate attack at the dock.
+            shipBoardingX = mySprite.x
+            shipBoardingY = mySprite.y
+            pirateGraceTicks = 0
+            pirateAlerted = false
+            pirateHuntPending = true
+            myEnemy.setVelocity(0, 0)
             scene.cameraFollowSprite(mySprite)
             game.splash("Back aboard!", hasCargo ? "Return to London with the cargo." : "The trader is waiting inland.")
         } else {
