@@ -6,6 +6,7 @@ namespace SpriteKind {
     export const ColonyNPC = SpriteKind.create()
     export const Sailor = SpriteKind.create()
     export const DockMarker = SpriteKind.create()
+    export const ColonyDecoration = SpriteKind.create()
 }
 const MAP_WIDTH = 200
 const MAP_HEIGHT = 200
@@ -127,6 +128,52 @@ function createColonyImage(): Image {
     building.setPixel(5, 1, 8); building.setPixel(6, 1, 1)
     building.setPixel(5, 2, 1); building.setPixel(6, 2, 2)
     return building
+}
+
+function createColonyDecoration(kind: number): Image {
+    const prop = image.create(16, 16)
+    if (kind == 0) {
+        // Caribbean palm: curved trunk and layered green fronds.
+        for (let y = 6; y <= 14; y++) prop.setPixel(8 + Math.floor((y - 6) / 4), y, 4)
+        for (let x = 2; x <= 13; x++) {
+            if (x <= 7) prop.setPixel(x, 5 + Math.floor((7 - x) / 3), 6)
+            if (x >= 8) prop.setPixel(x, 4 + Math.floor((x - 8) / 3), 6)
+        }
+        prop.setPixel(3, 4, 7); prop.setPixel(5, 3, 7); prop.setPixel(10, 3, 7); prop.setPixel(13, 5, 7)
+    } else if (kind == 1) {
+        // Small colonial storehouse with a thatched roof and timber doorway.
+        for (let y = 7; y <= 14; y++) for (let x = 2; x <= 13; x++) prop.setPixel(x, y, 13)
+        for (let y = 3; y <= 7; y++) for (let x = 1 + (7 - y); x <= 14 - (7 - y); x++) prop.setPixel(x, y, 4)
+        for (let x = 2; x <= 13; x++) prop.setPixel(x, 7, 15)
+        for (let y = 10; y <= 14; y++) { prop.setPixel(7, y, 14); prop.setPixel(8, y, 14) }
+        prop.setPixel(4, 9, 8); prop.setPixel(11, 9, 8)
+    } else if (kind == 2) {
+        // Red-and-cream market awning over a wooden trading counter.
+        for (let x = 1; x <= 14; x++) prop.setPixel(x, 6, 15)
+        for (let x = 2; x <= 13; x++) {
+            prop.setPixel(x, 7, x % 4 < 2 ? 2 : 13)
+            prop.setPixel(x, 8, x % 4 < 2 ? 2 : 13)
+        }
+        for (let y = 9; y <= 13; y++) { prop.setPixel(3, y, 4); prop.setPixel(12, y, 4) }
+        for (let x = 2; x <= 13; x++) prop.setPixel(x, 12, 14)
+        for (let x = 2; x <= 13; x++) prop.setPixel(x, 14, 4)
+    } else {
+        // Trade goods: stacked crates and a rum/supply barrel.
+        for (let y = 8; y <= 14; y++) for (let x = 1; x <= 7; x++) prop.setPixel(x, y, 4)
+        for (let x = 1; x <= 7; x++) { prop.setPixel(x, 8, 15); prop.setPixel(x, 14, 15) }
+        for (let y = 8; y <= 14; y++) { prop.setPixel(1, y, 15); prop.setPixel(7, y, 15) }
+        for (let y = 9; y <= 13; y++) prop.setPixel(4, y, 14)
+        for (let y = 8; y <= 14; y++) for (let x = 10; x <= 14; x++) prop.setPixel(x, y, 13)
+        for (let x = 10; x <= 14; x++) { prop.setPixel(x, 8, 15); prop.setPixel(x, 14, 15) }
+        prop.setPixel(11, 7, 15); prop.setPixel(13, 7, 15)
+    }
+    return prop
+}
+
+function placeColonyDecoration(kind: number, col: number, row: number): void {
+    const prop = sprites.create(createColonyDecoration(kind), SpriteKind.ColonyDecoration)
+    prop.z = 16
+    tiles.placeOnTile(prop, tiles.getTileLocation(col, row))
 }
 
 function createNoobImage(trader: boolean): Image {
@@ -476,6 +523,13 @@ colonyNPC = sprites.create(createTraderImage(), SpriteKind.ColonyNPC)
 colonyNPC.z = 18
 tiles.placeOnTile(colonyNPC, tiles.getTileLocation(COLONY_NPC_COL, COLONY_NPC_ROW))
 
+// A lived-in Caribbean trading post: palms, a storehouse, a market stall, and goods.
+// These props occupy nearby grass tiles and leave the dock-to-trader path clear.
+placeColonyDecoration(0, 49, 67)
+placeColonyDecoration(1, 51, 66)
+placeColonyDecoration(2, 55, 69)
+placeColonyDecoration(3, 51, 70)
+
 function spawnCargoAtColony(): void {
     if (!cargoSpawned) {
         cargo = sprites.create(createCargoImage(), SpriteKind.Cargo)
@@ -511,6 +565,11 @@ function setSailorTerrainMode(onFoot: boolean): void {
         // Keep the surrounding grass walkable so both remain approachable.
         tiles.setWallAt(tiles.getTileLocation(COLONY_NPC_COL, COLONY_NPC_ROW), true)
         tiles.setWallAt(tiles.getTileLocation(COLONY_COL, COLONY_ROW), true)
+        // Keep the new settlement props solid too, without blocking the approach.
+        tiles.setWallAt(tiles.getTileLocation(49, 67), true)
+        tiles.setWallAt(tiles.getTileLocation(51, 66), true)
+        tiles.setWallAt(tiles.getTileLocation(55, 69), true)
+        tiles.setWallAt(tiles.getTileLocation(51, 70), true)
     }
 }
 
