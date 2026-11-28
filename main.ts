@@ -316,8 +316,8 @@ function buildWorldMap(): void {
     const routeTile = image.create(16, 16)
     routeTile.fill(8)
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-        if (Math.abs(y - x) <= 1 && (x + y) % 4 != 1) routeTile.setPixel(x, y, 5)
-        else if (Math.abs(y - x) == 2 && (x + y) % 5 == 0) routeTile.setPixel(x, y, 4)
+        if (Math.abs(y - (15 - x)) <= 1 && (x + y) % 4 != 1) routeTile.setPixel(x, y, 5)
+        else if (Math.abs(y - (15 - x)) == 2 && (x + y) % 5 == 0) routeTile.setPixel(x, y, 4)
     }
 
     // Mountain tile: stepped pale peaks with darker foothills.
