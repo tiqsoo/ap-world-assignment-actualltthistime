@@ -27,9 +27,9 @@ function pointInPolygon(x: number, y: number, points: number[], start: number, p
 
 function createShipImage(pirate: boolean): Image {
     const ship = image.create(24, 24)
-    const sailColor = pirate ? 2 : 1
-    const trimColor = pirate ? 10 : 13
-    const hullColor = pirate ? 13 : 14
+    const sailColor = pirate ? 15 : 1
+    const trimColor = pirate ? 1 : 13
+    const hullColor = pirate ? 4 : 14
     for (let y = 2; y <= 17; y++) ship.setPixel(12, y, 15)
     for (let x = 10; x <= 14; x++) ship.setPixel(x, 5, 14)
     for (let y = 5; y <= 15; y++) {
@@ -51,6 +51,24 @@ function createShipImage(pirate: boolean): Image {
     }
     for (let x = 7; x <= 16; x++) ship.setPixel(x, 21, 15)
     for (let x = 6; x <= 17; x++) ship.setPixel(x, 18, trimColor)
+    if (pirate) {
+        // A compact white skull and crossed bones on the black Jolly Roger sail.
+        for (let x = 9; x <= 11; x++) ship.setPixel(x, 8, 1)
+        for (let x = 8; x <= 11; x++) ship.setPixel(x, 9, 1)
+        for (let x = 8; x <= 11; x++) ship.setPixel(x, 10, 1)
+        for (let x = 9; x <= 10; x++) ship.setPixel(x, 11, 1)
+        ship.setPixel(9, 9, 15)
+        ship.setPixel(11, 9, 15)
+        ship.setPixel(10, 10, 15)
+        ship.setPixel(7, 12, 1)
+        ship.setPixel(8, 13, 1)
+        ship.setPixel(9, 14, 1)
+        ship.setPixel(10, 15, 1)
+        ship.setPixel(10, 12, 1)
+        ship.setPixel(9, 13, 1)
+        ship.setPixel(8, 14, 1)
+        ship.setPixel(7, 15, 1)
+    }
     ship.setPixel(18, 15, 2)
     ship.setPixel(19, 14, 15)
     return ship
@@ -677,6 +695,12 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.HomePort, function (player, port
         game.splash("VICTORY!", "Cargo delivered. The Atlantic voyage is complete.")
         game.over(true)
     }
+})
+
+// Make the losing condition explicit: the third pirate collision ends the voyage.
+info.onLifeZero(function () {
+    game.splash("VOYAGE LOST", "No lives remain. Your voyage is over.")
+    game.over(false)
 })
 
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate) {
