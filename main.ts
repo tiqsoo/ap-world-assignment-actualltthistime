@@ -4,6 +4,8 @@ namespace SpriteKind {
     export const FortMarker = SpriteKind.create()
     export const ColonyMarker = SpriteKind.create()
     export const ColonyNPC = SpriteKind.create()
+    export const Sailor = SpriteKind.create()
+    export const DockMarker = SpriteKind.create()
 }
 const MAP_WIDTH = 200
 const MAP_HEIGHT = 200
@@ -24,8 +26,9 @@ function pointInPolygon(x: number, y: number, points: number[], start: number, p
 
 function createShipImage(pirate: boolean): Image {
     const ship = image.create(24, 24)
-    const sailColor = pirate ? 14 : 1
-    const trimColor = pirate ? 2 : 4
+    const sailColor = pirate ? 2 : 1
+    const trimColor = pirate ? 10 : 13
+    const hullColor = pirate ? 13 : 14
     for (let y = 2; y <= 17; y++) ship.setPixel(12, y, 15)
     for (let x = 10; x <= 14; x++) ship.setPixel(x, 5, 14)
     for (let y = 5; y <= 15; y++) {
@@ -43,7 +46,7 @@ function createShipImage(pirate: boolean): Image {
     for (let x = 4; x <= 19; x++) ship.setPixel(x, 17, 15)
     for (let y = 18; y <= 20; y++) {
         const inset = y - 18
-        for (let x = 4 + inset; x <= 19 - inset; x++) ship.setPixel(x, y, 14)
+        for (let x = 4 + inset; x <= 19 - inset; x++) ship.setPixel(x, y, hullColor)
     }
     for (let x = 7; x <= 16; x++) ship.setPixel(x, 21, 15)
     for (let x = 6; x <= 17; x++) ship.setPixel(x, 18, trimColor)
@@ -143,6 +146,56 @@ function createTraderImage(): Image {
     person.setPixel(4, 22, 15); person.setPixel(11, 22, 15)
     return person
 }
+
+function createSailorImage(): Image {
+    const sailor = image.create(16, 24)
+    // Cap and face
+    for (let x = 4; x <= 11; x++) sailor.setPixel(x, 3, 4)
+    for (let x = 5; x <= 10; x++) sailor.setPixel(x, 2, 15)
+    for (let y = 4; y <= 8; y++) for (let x = 5; x <= 10; x++) sailor.setPixel(x, y, 5)
+    sailor.setPixel(6, 6, 15)
+    sailor.setPixel(9, 6, 15)
+    // Blue naval coat with a white collar
+    for (let y = 9; y <= 17; y++) for (let x = 3; x <= 12; x++) sailor.setPixel(x, y, 8)
+    sailor.setPixel(7, 9, 1)
+    sailor.setPixel(8, 9, 1)
+    for (let y = 10; y <= 16; y++) sailor.setPixel(7, y, 15)
+    // Arms, trousers, and boots
+    for (let y = 11; y <= 15; y++) {
+        sailor.setPixel(2, y, 5)
+        sailor.setPixel(13, y, 5)
+    }
+    for (let y = 18; y <= 21; y++) {
+        sailor.setPixel(5, y, 15)
+        sailor.setPixel(6, y, 15)
+        sailor.setPixel(9, y, 15)
+        sailor.setPixel(10, y, 15)
+    }
+    sailor.setPixel(4, 22, 15)
+    sailor.setPixel(11, 22, 15)
+    return sailor
+}
+
+function createDockImage(): Image {
+    const pier = image.create(24, 16)
+    for (let y = 3; y <= 12; y++) {
+        for (let x = 1; x <= 22; x++) pier.setPixel(x, y, 14)
+    }
+    for (let x = 1; x <= 22; x += 4) {
+        for (let y = 3; y <= 12; y++) pier.setPixel(x, y, 4)
+    }
+    for (let x = 2; x <= 21; x++) {
+        pier.setPixel(x, 2, 15)
+        pier.setPixel(x, 13, 15)
+    }
+    for (let x = 3; x <= 20; x += 5) {
+        pier.setPixel(x, 14, 4)
+        pier.setPixel(x + 1, 14, 4)
+    }
+    return pier
+}
+
+let worldTerrain: Image
 
 function buildWorldMap(): void {
     const continentPoints: number[] = [
@@ -247,7 +300,7 @@ function buildWorldMap(): void {
             mapImage.setPixel(x, y, 1)
         }
     }
-    const routePoints = [[93, 35], [87, 42], [81, 49], [75, 56], [69, 63], [64, 69], [61, 72]]
+    const routePoints = [[93, 35], [87, 42], [81, 49], [75, 56], [69, 63], [64, 68], [58, 72]]
     for (let p = 0; p < routePoints.length - 1; p++) {
         const ax = routePoints[p][0], ay = routePoints[p][1]
         const bx = routePoints[p + 1][0], by = routePoints[p + 1][1]
@@ -256,7 +309,7 @@ function buildWorldMap(): void {
             if (i % 3 != 1) {
                 const x = Math.round(ax + (bx - ax) * i / steps)
                 const y = Math.round(ay + (by - ay) * i / steps)
-                if (mapImage.getPixel(x, y) == 1) mapImage.setPixel(x, y, 6)
+                if (mapImage.getPixel(x, y) == 1 || mapImage.getPixel(x, y) == 5) mapImage.setPixel(x, y, 6)
             }
         }
     }
@@ -332,6 +385,7 @@ function buildWorldMap(): void {
     for (let x = 5; x <= 9; x++) mountainTile.setPixel(x, 7, 1)
     mountainTile.setPixel(7, 4, 1); mountainTile.setPixel(6, 10, 14); mountainTile.setPixel(8, 11, 14)
 
+    worldTerrain = mapImage
     const mapData = control.createBuffer(4 + MAP_WIDTH * MAP_HEIGHT)
     mapData.setNumber(NumberFormat.UInt16LE, 0, MAP_WIDTH)
     mapData.setNumber(NumberFormat.UInt16LE, 2, MAP_HEIGHT)
@@ -355,16 +409,20 @@ const PLAYER_START_COL = 95
 const PLAYER_START_ROW = 35
 const HOME_PORT_COL = 93
 const HOME_PORT_ROW = 35
-const CARGO_COL = 61
-const CARGO_ROW = 72
-const FORT_ONE_COL = 74
-const FORT_ONE_ROW = 61
-const FORT_TWO_COL = 81
-const FORT_TWO_ROW = 55
-const COLONY_COL = 64
+const DOCK_COL = 58
+const DOCK_ROW = 72
+const SAILOR_START_COL = 56
+const SAILOR_START_ROW = 72
+const CARGO_COL = 55
+const CARGO_ROW = 74
+const FORT_ONE_COL = 52
+const FORT_ONE_ROW = 55
+const FORT_TWO_COL = 145
+const FORT_TWO_ROW = 72
+const COLONY_COL = 52
 const COLONY_ROW = 69
-const COLONY_NPC_COL = 67
-const COLONY_NPC_ROW = 69
+const COLONY_NPC_COL = 54
+const COLONY_NPC_ROW = 71
 const PIRATE_COL = 76
 const PIRATE_ROW = 64
 const NORMAL_SHIP_SPEED = 90
@@ -373,56 +431,156 @@ const COMPASS_BOOST_DURATION_MS = 2000
 let hasCargo = false
 let pirateHitLock = false
 let compassReady = true
+let sailorMode = false
+let traderSpoken = false
+let cargoSpawned = false
 let homePort: Sprite
 let cargo: Sprite
 let colony: Sprite
 let colonyNPC: Sprite
+let dockMarker: Sprite
+let sailor: Sprite
+
 game.splash("The Atlantic Trade Route", "A British Empire voyage")
 buildWorldMap()
+
 let mySprite = sprites.create(createShipImage(false), SpriteKind.Player)
-mySprite.z = 10
+mySprite.z = 20
 mySprite.setFlag(SpriteFlag.StayInScreen, false)
 info.setLife(3)
 info.setScore(0)
 tiles.placeOnTile(mySprite, tiles.getTileLocation(PLAYER_START_COL, PLAYER_START_ROW))
 scene.cameraFollowSprite(mySprite)
 controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
+
 let myEnemy = sprites.create(createShipImage(true), SpriteKind.Enemy)
+myEnemy.z = 20
 tiles.placeOnTile(myEnemy, tiles.getTileLocation(PIRATE_COL, PIRATE_ROW))
-myEnemy.follow(mySprite, 45)
+
 homePort = sprites.create(createUnionJackPortImage(), SpriteKind.HomePort)
+homePort.z = 16
 tiles.placeOnTile(homePort, tiles.getTileLocation(HOME_PORT_COL, HOME_PORT_ROW))
-homePort.z = 2
-cargo = sprites.create(createCargoImage(), SpriteKind.Cargo)
-tiles.placeOnTile(cargo, tiles.getTileLocation(CARGO_COL, CARGO_ROW))
+
+dockMarker = sprites.create(createDockImage(), SpriteKind.DockMarker)
+dockMarker.z = 15
+tiles.placeOnTile(dockMarker, tiles.getTileLocation(DOCK_COL, DOCK_ROW))
+
 let fortOne = sprites.create(createFortImage(1), SpriteKind.FortMarker)
+fortOne.z = 14
 tiles.placeOnTile(fortOne, tiles.getTileLocation(FORT_ONE_COL, FORT_ONE_ROW))
 let fortTwo = sprites.create(createFortImage(2), SpriteKind.FortMarker)
+fortTwo.z = 14
 tiles.placeOnTile(fortTwo, tiles.getTileLocation(FORT_TWO_COL, FORT_TWO_ROW))
+
 colony = sprites.create(createColonyImage(), SpriteKind.ColonyMarker)
+colony.z = 15
 tiles.placeOnTile(colony, tiles.getTileLocation(COLONY_COL, COLONY_ROW))
-colony.z = 2
 colonyNPC = sprites.create(createTraderImage(), SpriteKind.ColonyNPC)
+colonyNPC.z = 18
 tiles.placeOnTile(colonyNPC, tiles.getTileLocation(COLONY_NPC_COL, COLONY_NPC_ROW))
-colonyNPC.z = 3
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Cargo, function (player, item) {
-    if (!hasCargo) {
-        hasCargo = true
-        item.destroy(effects.disintegrate)
-        info.changeScoreBy(10)
-        game.splash("Cargo collected", "Return it to London!")
+
+function spawnCargoAtColony(): void {
+    if (!cargoSpawned) {
+        cargo = sprites.create(createCargoImage(), SpriteKind.Cargo)
+        cargo.z = 18
+        tiles.placeOnTile(cargo, tiles.getTileLocation(CARGO_COL, CARGO_ROW))
+        cargoSpawned = true
+    }
+}
+
+function distanceToTile(sprite: Sprite, col: number, row: number): number {
+    const dx = sprite.x - (col * 16 + 8)
+    const dy = sprite.y - (row * 16 + 8)
+    return Math.sqrt(dx * dx + dy * dy)
+}
+
+// Only the colony region changes collision mode while the sailor is ashore.
+// Ships are blocked by all land/coast tiles; the sailor can walk on grass and beach,
+// but still cannot walk into the ocean, forests, or mountains.
+function setSailorTerrainMode(onFoot: boolean): void {
+    for (let x = 40; x <= 70; x++) {
+        for (let y = 55; y <= 90; y++) {
+            const tileIndex = worldTerrain.getPixel(x, y)
+            const boundary = x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1
+            if (onFoot) {
+                tiles.setWallAt(tiles.getTileLocation(x, y), boundary || tileIndex == 1 || tileIndex == 4 || tileIndex == 5 || tileIndex == 6 || tileIndex == 7)
+            } else {
+                tiles.setWallAt(tiles.getTileLocation(x, y), boundary || tileIndex == 2 || tileIndex == 3 || tileIndex == 4 || tileIndex == 7)
+            }
+        }
+    }
+}
+
+// The pirate hunts in open water but turns away from any coastline.
+game.onUpdateInterval(100, function () {
+    if (sailorMode) {
+        myEnemy.setVelocity(0, 0)
+        return
+    }
+    const centerCol = Math.floor(myEnemy.x / 16)
+    const centerRow = Math.floor(myEnemy.y / 16)
+    let coastX = 0
+    let coastY = 0
+    let nearestDistance = 999999
+    for (let dx = -6; dx <= 6; dx++) {
+        for (let dy = -6; dy <= 6; dy++) {
+            const col = centerCol + dx
+            const row = centerRow + dy
+            if (col >= 0 && col < MAP_WIDTH && row >= 0 && row < MAP_HEIGHT && worldTerrain.getPixel(col, row) == 3) {
+                const px = col * 16 + 8
+                const py = row * 16 + 8
+                const distX = myEnemy.x - px
+                const distY = myEnemy.y - py
+                const distance = distX * distX + distY * distY
+                if (distance < nearestDistance) {
+                    nearestDistance = distance
+                    coastX = px
+                    coastY = py
+                }
+            }
+        }
+    }
+    if (nearestDistance < 80 * 80) {
+        let awayX = myEnemy.x - coastX
+        let awayY = myEnemy.y - coastY
+        let length = Math.sqrt(awayX * awayX + awayY * awayY)
+        if (length < 1) {
+            awayX = 1
+            awayY = 0
+            length = 1
+        }
+        myEnemy.setVelocity(awayX / length * 65, awayY / length * 65)
+    } else {
+        const chaseX = mySprite.x - myEnemy.x
+        const chaseY = mySprite.y - myEnemy.y
+        const chaseLength = Math.sqrt(chaseX * chaseX + chaseY * chaseY)
+        if (chaseLength > 1) myEnemy.setVelocity(chaseX / chaseLength * 45, chaseY / chaseLength * 45)
+        else myEnemy.setVelocity(0, 0)
     }
 })
+
+// Cargo can only be collected on foot after speaking with the colonial trader.
+sprites.onOverlap(SpriteKind.Sailor, SpriteKind.Cargo, function (walker, item) {
+    if (sailorMode && traderSpoken && !hasCargo) {
+        hasCargo = true
+        cargoSpawned = false
+        item.destroy(effects.disintegrate)
+        info.changeScoreBy(10)
+        game.showLongText("Cargo secured! Return to the wooden dock, press A to board, and sail back to London.", DialogLayout.Bottom)
+    }
+})
+
 sprites.onOverlap(SpriteKind.Player, SpriteKind.HomePort, function (player, port) {
-    if (hasCargo) {
+    if (hasCargo && !sailorMode) {
         hasCargo = false
         info.changeScoreBy(50)
         game.splash("Trade route complete!", "Cargo delivered to London.")
         game.over(true)
     }
 })
+
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate) {
-    if (!pirateHitLock) {
+    if (!pirateHitLock && !sailorMode) {
         pirateHitLock = true
         info.changeLifeBy(-1)
         player.setFlag(SpriteFlag.GhostThroughSprites, true)
@@ -430,22 +588,65 @@ sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (player, pirate)
         myEnemy.setPosition(PIRATE_COL * 16 + 8, PIRATE_ROW * 16 + 8)
         if (hasCargo) {
             hasCargo = false
-            cargo = sprites.create(createCargoImage(), SpriteKind.Cargo)
-            tiles.placeOnTile(cargo, tiles.getTileLocation(CARGO_COL, CARGO_ROW))
+            spawnCargoAtColony()
+            game.splash("Cargo lost!", "It has been dropped at the colony.")
         }
         pause(900)
         player.setFlag(SpriteFlag.GhostThroughSprites, false)
         pirateHitLock = false
     }
 })
+
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (Math.abs(mySprite.x - colonyNPC.x) < 32 && Math.abs(mySprite.y - colonyNPC.y) < 32) {
-        game.showLongText("Colonial trader: These goods are bound for Britain. Your cargo is aboard. Sail northeast across the Atlantic and return it to the home port at London.", DialogLayout.Bottom)
+    if (!sailorMode) {
+        if (distanceToTile(mySprite, DOCK_COL, DOCK_ROW) <= 30) {
+            // Anchor the ship offshore and switch control to the sailor on land.
+            sailorMode = true
+            setSailorTerrainMode(true)
+            mySprite.setVelocity(0, 0)
+            controller.moveSprite(mySprite, 0, 0)
+            mySprite.setFlag(SpriteFlag.Invisible, true)
+            myEnemy.setVelocity(0, 0)
+            myEnemy.setFlag(SpriteFlag.Invisible, true)
+            sailor = sprites.create(createSailorImage(), SpriteKind.Sailor)
+            sailor.z = 21
+            sailor.setFlag(SpriteFlag.StayInScreen, false)
+            tiles.placeOnTile(sailor, tiles.getTileLocation(SAILOR_START_COL, SAILOR_START_ROW))
+            controller.moveSprite(sailor, 70, 70)
+            scene.cameraFollowSprite(sailor)
+            game.showLongText("You have docked at the British Caribbean colony. Walk inland to the trader and press A to speak. The trader will release the cargo for your return voyage.", DialogLayout.Bottom)
+        } else {
+            game.splash("Find the colony dock", "Sail to the wooden pier and press A.")
+        }
+    } else {
+        if (distanceToTile(sailor, COLONY_NPC_COL, COLONY_NPC_ROW) <= 28) {
+            if (!traderSpoken) {
+                traderSpoken = true
+                spawnCargoAtColony()
+                game.showLongText("Colonial trader: These colonial raw materials are bound for Britain. This trade supports mercantilism by bringing wealth and resources back to the home country. The crate is just outside the settlement. Collect it, return to your ship, and deliver it to the London home port.", DialogLayout.Bottom)
+            } else {
+                game.showLongText("Colonial trader: The cargo is ready. Take it back to London and complete the Atlantic trade voyage.", DialogLayout.Bottom)
+            }
+        } else if (distanceToTile(sailor, DOCK_COL, DOCK_ROW) <= 40) {
+            // Board the waiting ship and resume sailing controls.
+            setSailorTerrainMode(false)
+            sailor.destroy()
+            sailorMode = false
+            mySprite.setFlag(SpriteFlag.Invisible, false)
+            controller.moveSprite(mySprite, NORMAL_SHIP_SPEED, NORMAL_SHIP_SPEED)
+            myEnemy.setFlag(SpriteFlag.Invisible, false)
+            scene.cameraFollowSprite(mySprite)
+            game.splash("Back aboard!", hasCargo ? "Return to London with the cargo." : "The trader is waiting inland.")
+        } else {
+            game.splash("Explore the colony", "Find the trader or return to the dock.")
+        }
     }
 })
-game.showLongText("Captain, your voyage begins just offshore from the London home port on the west coast of Europe. Sail southwest across the Atlantic to the Caribbean colony, shown toward the lower-left of the map. Collect the cargo, then sail northeast back to London and touch the home-port flag to complete the trade route. Use the arrow keys to steer, A to speak with the colonial trader, and B for a short compass speed boost. Keep clear of the pirate ship. The camera follows your ship, so it stays near the center of the screen while the coastline and port move past it.", DialogLayout.Bottom)
+
+game.showLongText("Captain, sail from London to the British Caribbean colony. Use the arrow keys to steer. At the wooden pier, press A to go ashore. Walk inland, speak to the colonial trader with A, and collect the cargo crate for +10 points. Return to the pier and press A to board your ship. Sail back to London for +50 points and victory. Avoid the pirate ship: each collision costs a life and drops carried cargo. Press B for a temporary compass speed boost. The pirate avoids coastlines.", DialogLayout.Bottom)
+
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (compassReady) {
+    if (compassReady && !sailorMode) {
         compassReady = false
         controller.moveSprite(mySprite, COMPASS_BOOST_SPEED, COMPASS_BOOST_SPEED)
         pause(COMPASS_BOOST_DURATION_MS)
