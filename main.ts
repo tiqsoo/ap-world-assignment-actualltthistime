@@ -144,6 +144,11 @@ function buildWorldMap(): void {
     const mapData = control.createBuffer(4 + MAP_WIDTH * MAP_HEIGHT)
     mapData.setNumber(NumberFormat.UInt16LE, 0, MAP_WIDTH)
     mapData.setNumber(NumberFormat.UInt16LE, 2, MAP_HEIGHT)
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        for (let x = 0; x < MAP_WIDTH; x++) {
+            mapData.setNumber(NumberFormat.UInt8LE, 4 + y * MAP_WIDTH + x, mapImage.getPixel(x, y))
+        }
+    }
     const world = tiles.createTilemap(mapData, mapImage, [transparentTile, waterTile, landTile, coastTile, forestTile, waveTile], TileScale.Sixteen)
     tiles.setCurrentTilemap(world)
     for (let x = 0; x < MAP_WIDTH; x++) {
